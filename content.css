@@ -1,0 +1,15 @@
+.bookmark-btn {
+  opacity: 0.9;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.bookmark-btn:hover {
+  opacity: 1;
+}
+
+.ytp-left-controls .bookmark-btn {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
