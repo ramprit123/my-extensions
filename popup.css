@@ -5,11 +5,128 @@
   color: #ffffff;
 }
 
+/* Header Section */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 h1 {
   font-size: 1.5rem;
-  margin: 0 0 20px;
+  margin: 0;
   color: #ff0000;
-  text-align: center;
+}
+
+.settings-icon {
+  width: 24px;
+  height: 24px;
+  fill: #ffffff;
+}
+
+/* API Key Setup */
+.api-key-setup {
+  background: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.api-key-setup h3 {
+  margin: 0 0 10px;
+  color: #ff0000;
+}
+
+.form-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-group input {
+  flex: 1;
+  padding: 8px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #ffffff;
+}
+
+.save-btn {
+  padding: 8px 15px;
+  background: #ff0000;
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background: #ff3333;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #888;
+  margin: 5px 0 0;
+}
+
+.help-text a {
+  color: #ff0000;
+  text-decoration: none;
+}
+
+.help-text a:hover {
+  text-decoration: underline;
+}
+
+/* Search Bar */
+.search-bar {
+  margin-bottom: 15px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 8px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #ffffff;
+}
+
+/* All Bookmarks Section */
+.all-bookmarks {
+  margin-bottom: 15px;
+}
+
+.video-section {
+  background: #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  padding: 10px;
+}
+
+.video-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.video-thumbnail {
+  width: 120px;
+  height: 68px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.video-title {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 /* Category Selector */

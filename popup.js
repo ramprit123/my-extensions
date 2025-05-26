@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async function() {
   const bookmarksElement = document.getElementById('bookmarks');
-  const noBookmarksElement = document.getElementById('no-bookmarks');
+  const allBookmarksElement = document.getElementById("allBookmarks");
+  const noBookmarksElement = document.getElementById("no-bookmarks");
   const categorySelect = document.getElementById("bookmarkCategory");
   const addCategoryBtn = document.getElementById("addCategory");
   const categoryModal = document.getElementById("categoryModal");
@@ -10,13 +11,38 @@ document.addEventListener('DOMContentLoaded', async function() {
   const generateNotesBtn = document.getElementById("generateNotes");
   const aiNotesSection = document.getElementById("aiNotes");
   const notesContent = aiNotesSection.querySelector(".notes-content");
+  const searchInput = document.getElementById("searchBookmarks");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const apiKeySetup = document.getElementById("apiKeySetup");
+  const apiKeyInput = document.getElementById("apiKey");
+  const saveApiKeyBtn = document.getElementById("saveApiKey");
 
   let currentVideoId = "";
   let currentVideoBookmarks = [];
+  let allBookmarks = {};
 
-  // Get current tab
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const activeTab = tabs[0];
+  // Load API Key
+  async function loadApiKey() {
+    const response = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ type: "GET_API_KEY" }, resolve);
+    });
+    if (!response.apiKey) {
+      apiKeySetup.classList.remove("hidden");
+    } else {
+      apiKeyInput.value = response.apiKey;
+    }
+  }
+
+  // Save API Key
+  async function saveApiKey() {
+    const apiKey = apiKeyInput.value.trim();
+    if (apiKey) {
+      await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: "SET_API_KEY", apiKey }, resolve);
+      });
+      apiKeySetup.classList.add("hidden");
+    }
+  }
 
   // Load categories
   async function loadCategories() {
@@ -44,6 +70,114 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
+  // Load all bookmarks
+  async function loadAllBookmarks() {
+    const data = await chrome.storage.sync.get(null);
+    allBookmarks = {};
+
+    for (const key in data) {
+      if (key !== "categories" && key !== "apiKey") {
+        try {
+          const bookmarks = JSON.parse(data[key]);
+          if (Array.isArray(bookmarks) && bookmarks.length > 0) {
+            allBookmarks[key] = bookmarks;
+          }
+        } catch (e) {
+          console.error("Error parsing bookmarks:", e);
+        }
+      }
+    }
+
+    displayAllBookmarks();
+  }
+
+  // Display all bookmarks
+  function displayAllBookmarks() {
+    const selectedCategory = categorySelect.value;
+    const searchTerm = searchInput.value.toLowerCase();
+    let html = "";
+
+    for (const videoId in allBookmarks) {
+      const bookmarks = allBookmarks[videoId];
+      const filteredBookmarks = bookmarks.filter((bookmark) => {
+        const matchesCategory =
+          selectedCategory === "all" || bookmark.category === selectedCategory;
+        const matchesSearch = bookmark.desc.toLowerCase().includes(searchTerm);
+        return matchesCategory && matchesSearch;
+      });
+
+      if (filteredBookmarks.length > 0) {
+        html += `
+          <div class="video-section">
+            <div class="video-header">
+              <img class="video-thumbnail" src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" alt="Video thumbnail">
+              <div class="video-title">${
+                filteredBookmarks[0].videoTitle || "YouTube Video"
+              }</div>
+            </div>
+            ${filteredBookmarks
+              .map(
+                (bookmark) => `
+              <div class="bookmark-item" data-video-id="${videoId}" data-time="${
+                  bookmark.time
+                }">
+                <span class="bookmark-time">${getTime(bookmark.time)}</span>
+                <span class="bookmark-title">${bookmark.desc}</span>
+                <span class="bookmark-category">${
+                  bookmark.category || "other"
+                }</span>
+                <button class="bookmark-delete" data-video-id="${videoId}" data-timestamp="${
+                  bookmark.timestamp
+                }">
+                  ×
+                </button>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        `;
+      }
+    }
+
+    allBookmarksElement.innerHTML = html || "<p>No bookmarks found</p>";
+
+    // Add click handlers
+    document.querySelectorAll(".bookmark-item").forEach((bookmark) => {
+      bookmark.addEventListener("click", () => {
+        const videoId = bookmark.getAttribute("data-video-id");
+        const time = bookmark.getAttribute("data-time");
+        chrome.tabs.create({
+          url: `https://youtube.com/watch?v=${videoId}&t=${time}s`,
+        });
+      });
+    });
+
+    document.querySelectorAll(".bookmark-delete").forEach((button) => {
+      button.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const videoId = button.getAttribute("data-video-id");
+        const timestamp = button.getAttribute("data-timestamp");
+        const bookmarks = allBookmarks[videoId];
+        const newBookmarks = bookmarks.filter(
+          (b) => b.timestamp.toString() !== timestamp
+        );
+
+        await chrome.storage.sync.set({
+          [videoId]: JSON.stringify(newBookmarks),
+        });
+
+        if (newBookmarks.length === 0) {
+          delete allBookmarks[videoId];
+        } else {
+          allBookmarks[videoId] = newBookmarks;
+        }
+
+        displayAllBookmarks();
+      });
+    });
+  }
+
   // Generate AI notes
   async function generateNotes() {
     try {
@@ -56,6 +190,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         notesContent.innerHTML =
           "Please set your OpenRouter API key in the extension settings.";
         aiNotesSection.classList.remove("hidden");
+        apiKeySetup.classList.remove("hidden");
         return;
       }
 
@@ -102,6 +237,43 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
+  function getTime(t) {
+    var date = new Date(0);
+    date.setSeconds(t);
+    return date.toISOString().substr(11, 8);
+  }
+
+  // Event Listeners
+  addCategoryBtn.addEventListener("click", () =>
+    categoryModal.classList.remove("hidden")
+  );
+  saveCategoryBtn.addEventListener("click", saveCategory);
+  cancelCategoryBtn.addEventListener("click", () => {
+    categoryModal.classList.add("hidden");
+    newCategoryInput.value = "";
+  });
+  categorySelect.addEventListener("change", () => {
+    displayAllBookmarks();
+    if (currentVideoBookmarks.length > 0) {
+      displayBookmarks(currentVideoBookmarks);
+    }
+  });
+  generateNotesBtn.addEventListener("click", generateNotes);
+  searchInput.addEventListener("input", displayAllBookmarks);
+  settingsBtn.addEventListener("click", () => {
+    apiKeySetup.classList.toggle("hidden");
+  });
+  saveApiKeyBtn.addEventListener("click", saveApiKey);
+
+  // Initialize
+  loadCategories();
+  loadApiKey();
+  loadAllBookmarks();
+
+  // Get current tab and handle current video bookmarks if on YouTube
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const activeTab = tabs[0];
+
   if (activeTab.url && activeTab.url.includes("youtube.com/watch")) {
     const queryParameters = activeTab.url.split("?")[1];
     const urlParameters = new URLSearchParams(queryParameters);
@@ -123,91 +295,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
       });
     }
-  } else {
-    noBookmarksElement.classList.remove("hidden");
-    noBookmarksElement.innerHTML = "<p>Not a YouTube video page!</p>";
   }
-
-  function displayBookmarks(bookmarks) {
-    const selectedCategory = categorySelect.value;
-    const filteredBookmarks =
-      selectedCategory === "all"
-        ? bookmarks
-        : bookmarks.filter((b) => b.category === selectedCategory);
-
-    bookmarksElement.innerHTML = filteredBookmarks
-      .map((bookmark) => {
-        return `
-        <div class="bookmark-item" data-time="${bookmark.time}">
-          <span class="bookmark-time">${getTime(bookmark.time)}</span>
-          <span class="bookmark-title">${bookmark.desc}</span>
-          <span class="bookmark-category">${bookmark.category || "other"}</span>
-          <button class="bookmark-delete" data-timestamp="${
-            bookmark.timestamp
-          }">
-            ×
-          </button>
-        </div>
-      `;
-      })
-      .join("");
-
-    // Add click handlers
-    document.querySelectorAll(".bookmark-item").forEach((bookmark) => {
-      bookmark.addEventListener("click", () => {
-        const time = bookmark.getAttribute("data-time");
-        chrome.tabs.sendMessage(activeTab.id, {
-          type: "JUMP_TO_TIME",
-          videoTime: time,
-        });
-      });
-    });
-
-    document.querySelectorAll(".bookmark-delete").forEach((button) => {
-      button.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const timestamp = button.getAttribute("data-timestamp");
-        const newBookmarks = bookmarks.filter(
-          (b) => b.timestamp.toString() !== timestamp
-        );
-
-        chrome.storage.sync.set(
-          {
-            [currentVideoId]: JSON.stringify(newBookmarks),
-          },
-          () => {
-            currentVideoBookmarks = newBookmarks;
-            displayBookmarks(newBookmarks);
-            if (newBookmarks.length === 0) {
-              noBookmarksElement.classList.remove("hidden");
-              aiNotesSection.classList.add("hidden");
-            }
-          }
-        );
-      });
-    });
-  }
-
-  function getTime(t) {
-    var date = new Date(0);
-    date.setSeconds(t);
-    return date.toISOString().substr(11, 8);
-  }
-
-  // Event Listeners
-  addCategoryBtn.addEventListener("click", () =>
-    categoryModal.classList.remove("hidden")
-  );
-  saveCategoryBtn.addEventListener("click", saveCategory);
-  cancelCategoryBtn.addEventListener("click", () => {
-    categoryModal.classList.add("hidden");
-    newCategoryInput.value = "";
-  });
-  categorySelect.addEventListener("change", () =>
-    displayBookmarks(currentVideoBookmarks)
-  );
-  generateNotesBtn.addEventListener("click", generateNotes);
-
-  // Initialize categories
-  loadCategories();
 });
