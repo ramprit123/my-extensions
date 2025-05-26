@@ -8,12 +8,50 @@
   <div class="container">
     <h1>YouTube Bookmarks</h1>
     <div id="content">
+      <div class="category-selector">
+        <select id="bookmarkCategory">
+          <option value="all">All Bookmarks</option>
+          <option value="learning">Learning</option>
+          <option value="news">News</option>
+          <option value="stock">Stock</option>
+          <option value="other">Other</option>
+        </select>
+        <button id="addCategory" class="icon-button" title="Add New Category">+</button>
+      </div>
+      
+      <div class="bookmark-actions">
+        <button id="generateNotes" class="ai-button">
+          <svg class="ai-icon" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+          </svg>
+          Generate AI Notes
+        </button>
+      </div>
+
+      <div id="aiNotes" class="ai-notes hidden">
+        <h3>AI Generated Notes</h3>
+        <div class="notes-content"></div>
+      </div>
+
       <div id="bookmarks" class="bookmarks-container">
         <!-- Bookmarks will be inserted here -->
       </div>
+
       <div id="no-bookmarks" class="hidden">
         <p>No bookmarks yet!</p>
         <p class="help-text">While watching a YouTube video, click the bookmark icon in the video player to save timestamps.</p>
+      </div>
+
+      <!-- Category Modal -->
+      <div id="categoryModal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Add New Category</h3>
+          <input type="text" id="newCategoryName" placeholder="Enter category name">
+          <div class="modal-actions">
+            <button id="saveCategoryBtn">Save</button>
+            <button id="cancelCategoryBtn">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Bookmarker Settings</title>
+  <style>
+    body {
+      width: 350px;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #ffffff;
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, sans-serif;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 20px;
+      color: #ff0000;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #3a3a3a;
+      background: #2a2a2a;
+      color: #ffffff;
+      box-sizing: border-box;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 10px;
+      background: #ff0000;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    .save-btn:hover {
+      background: #cc0000;
+    }
+
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      display: none;
+    }
+
+    .status.success {
+      background: #28a745;
+      display: block;
+    }
+
+    .status.error {
+      background: #dc3545;
+      display: block;
+    }
+
+    .help-text {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #888;
+      line-height: 1.4;
+    }
+
+    .help-text a {
+      color: #ff0000;
+      text-decoration: none;
+    }
+
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Settings</h1>
+  
+  <div class="form-group">
+    <label for="apiKey">OpenRouter API Key</label>
+    <input type="text" id="apiKey" placeholder="Enter your API key">
+  </div>
+
+  <button class="save-btn" id="saveSettings">Save Settings</button>
+
+  <div id="status" class="status"></div>
+
+  <div class="help-text">
+    To get an API key:
+    <ol>
+      <li>Visit <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a></li>
+      <li>Create an account or sign in</li>
+      <li>Generate a new API key</li>
+      <li>Copy and paste the key here</li>
+    </ol>
+    Your API key is stored securely and only used for generating AI notes.
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

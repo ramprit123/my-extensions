@@ -1,27 +1,25 @@
-// Listen for extension installation or update
-chrome.runtime.onInstalled.addListener(function() {
-  console.log('YouTube Bookmarker installed or updated');
-});
-
-// Listen for messages from content script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'NEW_BOOKMARK') {
-    // Handle new bookmark creation
-    chrome.storage.sync.get([message.videoId], (data) => {
-      const bookmarks = data[message.videoId] ? JSON.parse(data[message.videoId]) : [];
+// Initialize default categories on installation
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.get("categories", ({ categories }) => {
+    if (!categories) {
       chrome.storage.sync.set({
-        [message.videoId]: JSON.stringify([...bookmarks, message.bookmark])
+        categories: ["learning", "news", "stock", "other"],
       });
-    });
-  }
+    }
+  });
 });
 
-// Listen for tab updates
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url?.includes('youtube.com/watch')) {
-    chrome.tabs.sendMessage(tabId, {
-      type: 'NEW_VIDEO',
-      videoId: new URLSearchParams(new URL(tab.url).search).get('v')
+// Store API key securely
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "SET_API_KEY") {
+    chrome.storage.sync.set({ openRouterApiKey: request.apiKey }, () => {
+      sendResponse({ success: true });
     });
+    return true;
+  } else if (request.type === "GET_API_KEY") {
+    chrome.storage.sync.get("openRouterApiKey", (data) => {
+      sendResponse({ apiKey: data.openRouterApiKey || null });
+    });
+    return true;
   }
 });
