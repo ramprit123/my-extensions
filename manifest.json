@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Bookmarker",
+  "name": "Universal Video Bookmarker with AI Notes",
   "version": "1.0",
-  "description": "Save timestamps in YouTube videos with AI-powered notes and category management",
+  "description": "Bookmark timestamps in any video, organize with categories, and generate AI-powered notes using AI.",
   "permissions": ["storage", "tabs"],
   "host_permissions": ["*://*.youtube.com/*", "https://api.openrouter.ai/*"],
   "action": {
