@@ -47,6 +47,44 @@ if (window.location.hostname === "www.youtube.com") {
     return addBookmarkBtn;
   };
 
+  // Create notification element
+  const createNotificationElement = () => {
+    const notification = document.createElement("div");
+    notification.id = "bookmark-notification";
+    notification.textContent = "Bookmark Added!";
+    notification.style.cssText = `
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      pointer-events: none;
+    `;
+    document.body.appendChild(notification);
+    return notification;
+  };
+
+  let bookmarkNotification = null;
+
+  // Show notification
+  const showNotification = (message) => {
+    if (!bookmarkNotification) {
+      bookmarkNotification = createNotificationElement();
+    }
+    bookmarkNotification.textContent = message;
+    bookmarkNotification.style.opacity = 1;
+    setTimeout(() => {
+      bookmarkNotification.style.opacity = 0;
+    }, 2000);
+  };
+
   // Add controls to YouTube player
   const addBookmarkToYouTube = () => {
     const youtubeLeftControls =
@@ -96,11 +134,16 @@ if (window.location.hostname === "www.youtube.com") {
       const bookmarks = data[currentVideo]
         ? JSON.parse(data[currentVideo])
         : [];
-      chrome.storage.sync.set({
-        [currentVideo]: JSON.stringify(
-          [...bookmarks, newBookmark].sort((a, b) => a.time - b.time)
-        ),
-      });
+      chrome.storage.sync.set(
+        {
+          [currentVideo]: JSON.stringify(
+            [...bookmarks, newBookmark].sort((a, b) => a.time - b.time)
+          ),
+        },
+        () => {
+          showNotification("Bookmark Added!");
+        }
+      );
     });
   };
 
